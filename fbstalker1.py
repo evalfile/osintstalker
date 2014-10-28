@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # -*- coding: utf-8 -*-
 from __future__ import division
 import httplib2,json
@@ -259,7 +261,7 @@ def cleanUpGraph(filename):
 			i = i.replace("&lt;","<")
 			i = i.replace("&gt;",">")
 			i = i.replace("&quot;",'"')
-			print i.strip()
+			#print i.strip()
 			newContent.append(i.strip())
 
 	f = open(filename,'w')
@@ -336,7 +338,7 @@ def loginFacebook(driver):
 		sys.exit()
 def write2Database(dbName,dataList):
 	try:
-		cprint("[*] Writing "+str(len(dataList))+" record(s) to database table: "+dbName,"white")
+		cprint("[*] Writing "+str(len(dataList))+" record(s) to database table: "+dbName,"red")
 		#print "[*] Writing "+str(len(dataList))+" record(s) to database table: "+dbName
 		numOfColumns = len(dataList[0])
 		c = conn.cursor()
@@ -467,7 +469,8 @@ def parseLikesPosts(id):
 def parseTimeline(html,username):
 	soup = BeautifulSoup(html)	
 	tlTime = soup.findAll("abbr")
-	temp123 = soup.findAll("div",{"role" : "article"})
+	#temp123 = soup.findAll("div",{"role" : "article"})
+	temp123 = soup.findAll("a",{"class" : "_5pcq"})
 	placesCheckin = []
 	timeOfPostList = []
 
@@ -795,14 +798,15 @@ def parseTimeline(html,username):
 			timeSlot2+=1
 		if tempTime >= 0 and tempTime < 3:
 			timeSlot1+=1
-	reportFile.write("Total % (00:00 to 03:00) "+str((timeSlot1/totalLen)*100)+" %\n")
-	reportFile.write("Total % (03:00 to 06:00) "+str((timeSlot2/totalLen)*100)+" %\n")
-	reportFile.write("Total % (06:00 to 09:00) "+str((timeSlot3/totalLen)*100)+" %\n")
-	reportFile.write("Total % (09:00 to 12:00) "+str((timeSlot4/totalLen)*100)+" %\n")
-	reportFile.write("Total % (12:00 to 15:00) "+str((timeSlot5/totalLen)*100)+" %\n")
-	reportFile.write("Total % (15:00 to 18:00) "+str((timeSlot6/totalLen)*100)+" %\n")
-	reportFile.write("Total % (18:00 to 21:00) "+str((timeSlot7/totalLen)*100)+" %\n")
-	reportFile.write("Total % (21:00 to 24:00) "+str((timeSlot8/totalLen)*100)+" %\n")
+	if totalLen != 0:
+		reportFile.write("Total % (00:00 to 03:00) "+str((timeSlot1/totalLen)*100)+" %\n")
+		reportFile.write("Total % (03:00 to 06:00) "+str((timeSlot2/totalLen)*100)+" %\n")
+		reportFile.write("Total % (06:00 to 09:00) "+str((timeSlot3/totalLen)*100)+" %\n")
+		reportFile.write("Total % (09:00 to 12:00) "+str((timeSlot4/totalLen)*100)+" %\n")
+		reportFile.write("Total % (12:00 to 15:00) "+str((timeSlot5/totalLen)*100)+" %\n")
+		reportFile.write("Total % (15:00 to 18:00) "+str((timeSlot6/totalLen)*100)+" %\n")
+		reportFile.write("Total % (18:00 to 21:00) "+str((timeSlot7/totalLen)*100)+" %\n")
+		reportFile.write("Total % (21:00 to 24:00) "+str((timeSlot8/totalLen)*100)+" %\n")
 
 	"""
 	reportFile.write("\nDate/Time of Facebook Posts\n")
@@ -1105,7 +1109,7 @@ def parseUserInfo(html):
 def parsePlacesVisited(html):
 	soup = BeautifulSoup(html)	
 	pageName = soup.findAll("div", {"class" : "_zs fwb"})
-	pageCategory = soup.findAll("div", {"class" : "_dew _dj_"})
+	pageCategory = soup.findAll("div", {"class" : "_pac _dj_"})
 	tempList = []
 	count=0
 	r = re.compile('a href="(.*?)\?ref=')
@@ -1120,7 +1124,7 @@ def parsePlacesVisited(html):
 def parsePlacesLiked(html):
 	soup = BeautifulSoup(html)	
 	pageName = soup.findAll("div", {"class" : "_zs fwb"})
-	pageCategory = soup.findAll("div", {"class" : "_dew _dj_"})
+	pageCategory = soup.findAll("div", {"class" : "_pac _dj_"})
 	tempList = []
 	count=0
 	r = re.compile('a href="(.*?)\?ref=')
@@ -1136,7 +1140,7 @@ def parsePlacesLiked(html):
 def parsePagesLiked(html):
 	soup = BeautifulSoup(html)	
 	pageName = soup.findAll("div", {"class" : "_zs fwb"})
-	pageCategory = soup.findAll("div", {"class" : "_dew _dj_"})
+	pageCategory = soup.findAll("div", {"class" : "_pac _dj_"})
 	tempList = []
 	count=0
 	r = re.compile('a href="(.*?)\?ref=')
@@ -1156,10 +1160,11 @@ def parsePhotosby(html):
 		html = str(i)
 		soup1 = BeautifulSoup(html)
 		pageName = soup1.findAll("img", {"class" : "img"})
-		pageName1 = soup1.findAll("img", {"class" : "scaledImageFitWidth img"})
+		pageName1 = soup1.findAll("img", {"class" : "scaledImageFitHeight img"})
 		pageName2 = soup1.findAll("img", {"class" : "_46-i img"})	
 		for z in pageName2:
-			if z['src'].endswith('.jpg'):
+			#if z['src'].endswith('.jpg'):
+			if ('.jpg') in z['src']:
 				url1 = i['href']
 				r = re.compile('fbid=(.*?)&set=bc')
 				m = r.search(url1)
@@ -1177,16 +1182,20 @@ def parsePhotosby(html):
 						html1 = open(filename, 'r').read()
 				soup2 = BeautifulSoup(html1)
 				username2 = soup2.find("div", {"class" : "fbPhotoContributorName"})
-				r = re.compile('a href="(.*?)"')
+				#print username2
+				r = re.compile('href="(.*?)"')
 				m = r.search(str(username2))
+				#print m.group(1)
 				if m:	
 					username3 = m.group(1)
 					username3 = username3.replace("https://www.facebook.com/","")
-					username3 = username3.replace("profile.php?id=","")
+					#username3 = username3.replace("profile.php?id=","")
+					username3 = username3.replace("?fref=photo","")
 					print "[*] Extracting Data from Photo Page: "+username3
 					tempList.append([str(uid),z['alt'],z['src'],i['href'],username3])
 		for y in pageName1:
-			if y['src'].endswith('.jpg'):
+			#if y['src'].endswith('.jpg'):
+			if ('.jpg') in y['src']:
 				url1 = i['href']
 				r = re.compile('fbid=(.*?)&set=bc')
 				m = r.search(url1)
@@ -1204,16 +1213,20 @@ def parsePhotosby(html):
 						html1 = open(filename, 'r').read()
 				soup2 = BeautifulSoup(html1)
 				username2 = soup2.find("div", {"class" : "fbPhotoContributorName"})
-				r = re.compile('a href="(.*?)"')
+				#print username2
+				r = re.compile('href="(.*?)"')
 				m = r.search(str(username2))
+				#print m.group(1)
 				if m:	
 					username3 = m.group(1)
 					username3 = username3.replace("https://www.facebook.com/","")
-					username3 = username3.replace("profile.php?id=","")
+					#username3 = username3.replace("profile.php?id=","")
+					username3 = username3.replace("?fref=photo","")
 					print "[*] Extracting Data from Photo Page: "+username3
 					tempList.append([str(uid),y['alt'],y['src'],i['href'],username3])
 		for x in pageName:
-			if x['src'].endswith('.jpg'):
+			#if x['src'].endswith('.jpg'):
+			if ('.jpg') in x['src']:
 				url1 = i['href']
 				r = re.compile('fbid=(.*?)&set=bc')
 				m = r.search(url1)
@@ -1231,16 +1244,18 @@ def parsePhotosby(html):
 						html1 = open(filename, 'r').read()
 				soup2 = BeautifulSoup(html1)
 				username2 = soup2.find("div", {"class" : "fbPhotoContributorName"})
-				r = re.compile('a href="(.*?)"')
+				#print username2
+				r = re.compile('href="(.*?)"')
 				m = r.search(str(username2))
+				#print m.group(1)
 				if m:	
 					username3 = m.group(1)
 					username3 = username3.replace("https://www.facebook.com/","")
-					username3 = username3.replace("profile.php?id=","")
+					#username3 = username3.replace("profile.php?id=","")
+					username3 = username3.replace("?fref=photo","")
 					print "[*] Extracting Data from Photo Page: "+username3
 					tempList.append([str(uid),x['alt'],x['src'],i['href'],username3])
 	return tempList
-
 
 def parsePhotosOf(html):
 	soup = BeautifulSoup(html)	
@@ -1250,10 +1265,11 @@ def parsePhotosOf(html):
 		html = str(i)
 		soup1 = BeautifulSoup(html)
 		pageName = soup1.findAll("img", {"class" : "img"})
-		pageName1 = soup1.findAll("img", {"class" : "scaledImageFitWidth img"})
+		pageName1 = soup1.findAll("img", {"class" : "scaledImageFitHeight img"})
 		pageName2 = soup1.findAll("img", {"class" : "_46-i img"})	
 		for z in pageName2:
-			if z['src'].endswith('.jpg'):
+			#if z['src'].endswith('.jpg'):
+			if ('.jpg') in z['src']:
 				url1 = i['href']
 				r = re.compile('fbid=(.*?)&set=bc')
 				m = r.search(url1)
@@ -1269,18 +1285,25 @@ def parsePhotosOf(html):
 						text_file.close()
 					else:
 						html1 = open(filename, 'r').read()
-				soup2 = BeautifulSoup(html1)
-				username2 = soup2.find("div", {"class" : "fbPhotoContributorName"})
-				r = re.compile('a href="(.*?)"')
-				m = r.search(str(username2))
-				if m:	
-					username3 = m.group(1)
-					username3 = username3.replace("https://www.facebook.com/","")
-					username3 = username3.replace("profile.php?id=","")
-					print "[*] Extracting Data from Photo Page: "+username3
-					tempList.append([str(uid),z['alt'],z['src'],i['href'],username3])
+					soup2 = BeautifulSoup(html1)
+					username2 = soup2.find("div", {"class" : "fbPhotoContributorName"})
+					#print username2
+					r = re.compile('href="(.*?)"')
+					m = r.search(str(username2))
+					#print m.group(1)
+					if m:	
+						username3 = m.group(1)
+						username3 = username3.replace("https://www.facebook.com/","")
+						#username3 = username3.replace("profile.php?id=","")
+						username3 = username3.replace("?fref=photo","")
+						print "[*] Extracting Data from Photo Page: "+username3
+						tempList.append([str(uid),z['alt'],z['src'],i['href'],username3])
+				else:
+					tempList.append([str(uid),z['alt'],z['src'],i['href'],'null'])
+						
 		for y in pageName1:
-			if y['src'].endswith('.jpg'):
+			#if y['src'].endswith('.jpg'):
+			if ('.jpg') in y['src']:
 				url1 = i['href']
 				r = re.compile('fbid=(.*?)&set=bc')
 				m = r.search(url1)
@@ -1298,16 +1321,20 @@ def parsePhotosOf(html):
 						html1 = open(filename, 'r').read()
 				soup2 = BeautifulSoup(html1)
 				username2 = soup2.find("div", {"class" : "fbPhotoContributorName"})
-				r = re.compile('a href="(.*?)"')
+				#print username2
+				r = re.compile('href="(.*?)"')
 				m = r.search(str(username2))
+				#print m.group(1)
 				if m:	
 					username3 = m.group(1)
 					username3 = username3.replace("https://www.facebook.com/","")
-					username3 = username3.replace("profile.php?id=","")
+					#username3 = username3.replace("profile.php?id=","")
+					username3 = username3.replace("?fref=photo","")
 					print "[*] Extracting Data from Photo Page: "+username3
 					tempList.append([str(uid),y['alt'],y['src'],i['href'],username3])
 		for x in pageName:
-			if x['src'].endswith('.jpg'):
+			#if x['src'].endswith('.jpg'):
+			if ('.jpg') in x['src']:
 				url1 = i['href']
 				r = re.compile('fbid=(.*?)&set=bc')
 				m = r.search(url1)
@@ -1325,30 +1352,32 @@ def parsePhotosOf(html):
 						html1 = open(filename, 'r').read()
 				soup2 = BeautifulSoup(html1)
 				username2 = soup2.find("div", {"class" : "fbPhotoContributorName"})
-				r = re.compile('a href="(.*?)"')
+				#print username2
+				r = re.compile('href="(.*?)"')
 				m = r.search(str(username2))
+				#print m.group(1)
 				if m:	
 					username3 = m.group(1)
 					username3 = username3.replace("https://www.facebook.com/","")
-					username3 = username3.replace("profile.php?id=","")
+					#username3 = username3.replace("profile.php?id=","")
+					username3 = username3.replace("?fref=photo","")
 					print "[*] Extracting Data from Photo Page: "+username3
 					tempList.append([str(uid),x['alt'],x['src'],i['href'],username3])
 	return tempList
-
 
 def parsePhotosLiked(html):
 	soup = BeautifulSoup(html)	
 	photoPageLink = soup.findAll("a", {"class" : "_23q"})
 	tempList = []
-
 	for i in photoPageLink:
 		html = str(i)
 		soup1 = BeautifulSoup(html)
 		pageName = soup1.findAll("img", {"class" : "img"})
-		pageName1 = soup1.findAll("img", {"class" : "scaledImageFitWidth img"})
+		pageName1 = soup1.findAll("img", {"class" : "scaledImageFitHeight img"})
 		pageName2 = soup1.findAll("img", {"class" : "_46-i img"})	
 		for z in pageName2:
-			if z['src'].endswith('.jpg'):
+			#if z['src'].endswith('.jpg'):
+			if ('.jpg') in z['src']:
 				url1 = i['href']
 				r = re.compile('fbid=(.*?)&set=bc')
 				m = r.search(url1)
@@ -1366,23 +1395,23 @@ def parsePhotosLiked(html):
 						html1 = open(filename, 'r').read()
 					soup2 = BeautifulSoup(html1)
 					username2 = soup2.find("div", {"class" : "fbPhotoContributorName"})
-					r = re.compile('a href="(.*?)"')
+					#print username2
+					r = re.compile('href="(.*?)"')
 					m = r.search(str(username2))
+					#print m.group(1)
 					if m:	
-						
 						username3 = m.group(1)
 						username3 = username3.replace("https://www.facebook.com/","")
-						username3 = username3.replace("profile.php?id=","")
-						if username3.count('/')==2:
-							username3 = username3.split('/')[2]
-	
+						#username3 = username3.replace("profile.php?id=","")
+						username3 = username3.replace("?fref=photo","")
 						print "[*] Extracting Data from Photo Page: "+username3
-						tmpStr = []
-						tmpStr.append([str(uid),repr(zlib.compress(normalize(z['alt']))),normalize(z['src']),normalize(i['href']),normalize(username3)])
-						write2Database('photosLiked',tmpStr)
-
+						tempList.append([str(uid),z['alt'],z['src'],i['href'],username3])
+				else:
+					tempList.append([str(uid),z['alt'],z['src'],i['href'],'null'])
+					
 		for y in pageName1:
-			if y['src'].endswith('.jpg'):
+			#if y['src'].endswith('.jpg'):
+			if ('.jpg') in y['src']:
 				url1 = i['href']
 				r = re.compile('fbid=(.*?)&set=bc')
 				m = r.search(url1)
@@ -1400,22 +1429,22 @@ def parsePhotosLiked(html):
 						html1 = open(filename, 'r').read()
 					soup2 = BeautifulSoup(html1)
 					username2 = soup2.find("div", {"class" : "fbPhotoContributorName"})
-					r = re.compile('a href="(.*?)"')
+					#print username2
+					r = re.compile('href="(.*?)"')
 					m = r.search(str(username2))
+					#print m.group(1)
 					if m:	
 						username3 = m.group(1)
 						username3 = username3.replace("https://www.facebook.com/","")
-						username3 = username3.replace("profile.php?id=","")
-						if username3.count('/')==2:
-							username3 = username3.split('/')[2]
-
+						#username3 = username3.replace("profile.php?id=","")
+						username3 = username3.replace("?fref=photo","")
 						print "[*] Extracting Data from Photo Page: "+username3
-						tmpStr = []
-						tmpStr.append([str(uid),repr(zlib.compress(normalize(y['alt']))),normalize(y['src']),normalize(i['href']),normalize(username3)])
-						write2Database('photosLiked',tmpStr)
-
+						tempList.append([str(uid),y['alt'],y['src'],i['href'],username3])
+				else:
+					tempList.append([str(uid),y['alt'],y['src'],i['href'],'null'])
 		for x in pageName:
-			if x['src'].endswith('.jpg'):
+			#if x['src'].endswith('.jpg'):
+			if ('.jpg') in x['src']:
 				url1 = i['href']
 				r = re.compile('fbid=(.*?)&set=bc')
 				m = r.search(url1)
@@ -1433,20 +1462,19 @@ def parsePhotosLiked(html):
 						html1 = open(filename, 'r').read()
 					soup2 = BeautifulSoup(html1)
 					username2 = soup2.find("div", {"class" : "fbPhotoContributorName"})
-					r = re.compile('a href="(.*?)"')
+					#print username2
+					r = re.compile('href="(.*?)"')
 					m = r.search(str(username2))
+					#print m.group(1)
 					if m:	
 						username3 = m.group(1)
 						username3 = username3.replace("https://www.facebook.com/","")
-						username3 = username3.replace("profile.php?id=","")
-						if username3.count('/')==2:
-							username3 = username3.split('/')[2]
-
+						#username3 = username3.replace("profile.php?id=","")
+						username3 = username3.replace("?fref=photo","")
 						print "[*] Extracting Data from Photo Page: "+username3
-						tmpStr = []
-						tmpStr.append([str(uid),repr(zlib.compress(normalize(x['alt']))),normalize(x['src']),normalize(i['href']),normalize(username3)])
-						write2Database('photosLiked',tmpStr)
-
+						tempList.append([str(uid),x['alt'],x['src'],i['href'],username3])
+				else:
+					tempList.append([str(uid),x['alt'],x['src'],i['href'],'null'])
 	return tempList
 
 def downloadPage(url):
@@ -1454,6 +1482,118 @@ def downloadPage(url):
 	html = driver.page_source
 	return html
 
+def parsePhotosCommented(html):
+	soup = BeautifulSoup(html)	
+	photoPageLink = soup.findAll("a", {"class" : "_23q"})
+	tempList = []
+	for i in photoPageLink:
+		html = str(i)
+		soup1 = BeautifulSoup(html)
+		pageName = soup1.findAll("img", {"class" : "img"})
+		pageName1 = soup1.findAll("img", {"class" : "scaledImageFitHeight img"})
+		pageName2 = soup1.findAll("img", {"class" : "_46-i img"})	
+		for z in pageName2:
+			#if z['src'].endswith('.jpg'):
+			if ('.jpg') in z['src']:
+				url1 = i['href']
+				r = re.compile('fbid=(.*?)&set=bc')
+				m = r.search(url1)
+				if m:
+					filename = 'fbid_'+ m.group(1)+'.html'
+					filename = filename.replace("profile.php?id=","")
+					if not os.path.lexists(filename):
+						#html1 = downloadPage(url1)
+						html1 = downloadFile(url1)
+						print "[*] Caching Photo Page: "+m.group(1)
+						text_file = open(filename, "w")
+						text_file.write(normalize(html1))
+						text_file.close()
+					else:
+						html1 = open(filename, 'r').read()
+					soup2 = BeautifulSoup(html1)
+					username2 = soup2.find("div", {"class" : "fbPhotoContributorName"})
+					#print username2
+					r = re.compile('href="(.*?)"')
+					m = r.search(str(username2))
+					#print m.group(1)
+					if m:	
+						username3 = m.group(1)
+						username3 = username3.replace("https://www.facebook.com/","")
+						#username3 = username3.replace("profile.php?id=","")
+						username3 = username3.replace("?fref=photo","")
+						print "[*] Extracting Data from Photo Page: "+username3
+						tempList.append([str(uid),z['alt'],z['src'],i['href'],username3])
+				else:
+					tempList.append([str(uid),z['alt'],z['src'],i['href'],'null'])
+					
+		for y in pageName1:
+			#if y['src'].endswith('.jpg'):
+			if ('.jpg') in y['src']:
+				url1 = i['href']
+				r = re.compile('fbid=(.*?)&set=bc')
+				m = r.search(url1)
+				if m:
+					filename = 'fbid_'+ m.group(1)+'.html'
+					filename = filename.replace("profile.php?id=","")
+					if not os.path.lexists(filename):
+						#html1 = downloadPage(url1)
+						html1 = downloadFile(url1)
+						print "[*] Caching Photo Page: "+m.group(1)
+						text_file = open(filename, "w")
+						text_file.write(normalize(html1))
+						text_file.close()
+					else:
+						html1 = open(filename, 'r').read()
+					soup2 = BeautifulSoup(html1)
+					username2 = soup2.find("div", {"class" : "fbPhotoContributorName"})
+					#print username2
+					r = re.compile('href="(.*?)"')
+					m = r.search(str(username2))
+					#print m.group(1)
+					if m:	
+						username3 = m.group(1)
+						username3 = username3.replace("https://www.facebook.com/","")
+						#username3 = username3.replace("profile.php?id=","")
+						username3 = username3.replace("?fref=photo","")
+						print "[*] Extracting Data from Photo Page: "+username3
+						tempList.append([str(uid),y['alt'],y['src'],i['href'],username3])
+				else:
+					tempList.append([str(uid),y['alt'],y['src'],i['href'],'null'])
+		for x in pageName:
+			#if x['src'].endswith('.jpg'):
+			if ('.jpg') in x['src']:
+				url1 = i['href']
+				r = re.compile('fbid=(.*?)&set=bc')
+				m = r.search(url1)
+				if m:
+					filename = 'fbid_'+ m.group(1)+'.html'
+					filename = filename.replace("profile.php?id=","")
+					if not os.path.lexists(filename):
+						#html1 = downloadPage(url1)
+						html1 = downloadFile(url1)
+						print "[*] Caching Photo Page: "+m.group(1)
+						text_file = open(filename, "w")
+						text_file.write(normalize(html1))
+						text_file.close()
+					else:
+						html1 = open(filename, 'r').read()
+					soup2 = BeautifulSoup(html1)
+					username2 = soup2.find("div", {"class" : "fbPhotoContributorName"})
+					#print username2
+					r = re.compile('href="(.*?)"')
+					m = r.search(str(username2))
+					#print m.group(1)
+					if m:	
+						username3 = m.group(1)
+						username3 = username3.replace("https://www.facebook.com/","")
+						#username3 = username3.replace("profile.php?id=","")
+						username3 = username3.replace("?fref=photo","")
+						print "[*] Extracting Data from Photo Page: "+username3
+						tempList.append([str(uid),x['alt'],x['src'],i['href'],username3])
+				else:
+					tempList.append([str(uid),x['alt'],x['src'],i['href'],'null'])
+	return tempList
+'''
 def parsePhotosCommented(html):
 	soup = BeautifulSoup(html)	
 	photoPageLink = soup.findAll("a", {"class" : "_23q"})
@@ -1549,6 +1689,7 @@ def parsePhotosCommented(html):
 					tempList.append([str(uid),x['alt'],x['src'],i['href'],username3])
 
 	return tempList
+'''
 
 def parseVideosBy(html):
 	soup = BeautifulSoup(html)	
@@ -1765,7 +1906,7 @@ def mainProcess(username):
 	data1 = parseAppsUsed(html)
 	result = ""
 	for x in data1:
-		print x	
+		print "[*] Installed: " + x	
 		x = x.lower()
 		if "blackberry" in x:
 			result += "[*] User is using a Blackberry device\n"
@@ -1820,13 +1961,13 @@ def mainProcess(username):
         filename = username+'_photosBy.htm'
         if not os.path.lexists(filename):
             	print "[*] Caching Photos By: "+username
-            	html = downloadPhotosOf(driver,uid)
+            	html = downloadPhotosBy(driver,uid)
             	text_file = open(filename, "w")
             	text_file.write(html.encode('utf8'))
             	text_file.close()
         else:
             	html = open(filename, 'r').read()
-        dataList = parsePhotosOf(html)
+        dataList = parsePhotosby(html)
         write2Database('photosBy',dataList)        
 
 	#Disable
@@ -1841,8 +1982,8 @@ def mainProcess(username):
         else:
             	html = open(filename, 'r').read()
         dataList = parsePhotosLiked(html)
-        print "[*] Writing "+str(len(dataList))+" records to table: photosLiked"
-        #write2Database('photosLiked',dataList)
+        #print "[*] Writing "+str(len(dataList))+" records to table: photosLiked"
+        write2Database('photosLiked',dataList)
 
         filename = username+'_photoscommented.htm'
     	print filename
@@ -1871,6 +2012,8 @@ def mainProcess(username):
             	dataList = parseFriends(html)
             	print "[*] Writing Friends List to Database: "+username
             	write2Database('friends',dataList)
+           	print "[*] Extracting Friends from Likes/Comments: "+username
+            	write2Database('friends',sidechannelFriends(uid))	
 	else:
            	print "[*] Extracting Friends from Likes/Comments: "+username
             	write2Database('friends',sidechannelFriends(uid))	
@@ -1927,7 +2070,7 @@ def mainProcess(username):
 		if "/" not in filename:
 			if not os.path.lexists(filename):
 				print 'Writing to '+filename
-				url = 'https://www.facebook.com/'+i.encode('utf8')+'/info'
+				url = 'https://www.facebook.com/'+i.encode('utf8')+'/about'
 				html = downloadFile(url)	
 				#html = downloadUserInfo(driver,i.encode('utf8'))
 				if len(html)>0:
@@ -1949,11 +2092,11 @@ def mainProcess(username):
 			#tmpInfoStr.append([uid,str(normalize(i)),str(normalize(userInfoList[0])),str(normalize(userInfoList[1])),str(normalize(userInfoList[2])),str(normalize(userInfoList[3])),str(normalize(userInfoList[4])),str(normalize(userInfoList[5])),str(normalize(userInfoList[6]))])
 			#tmpInfoStr.append([i[1],userInfoList[0],userInfoList[1],userInfoList[2],userInfoList[3],userInfoList[4],userInfoList[5],userInfoList[6]])
 
-	#cprint("[*] Writing "+str(len(dataList))+" record(s) to database table: "+dbName,"white")
-	cprint("[*] Report has been written to: "+str(reportFileName),"white")
-	cprint("[*] Preparing Maltego output...","white")
+	#cprint("[*] Writing "+str(len(dataList))+" record(s) to database table: "+dbName,"red")
+	cprint("[*] Report has been written to: "+str(reportFileName),"red")
+	cprint("[*] Preparing Maltego output...","red")
 	createMaltego(username)
-	cprint("[*] Maltego file has been created","white")
+	cprint("[*] Maltego file has been created","red")
 
     	driver.close()
         driver.quit
